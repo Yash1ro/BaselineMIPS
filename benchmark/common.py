@@ -58,7 +58,7 @@ class DatasetConfig:
     ipnsw_graph: str = str(IPNSW_DIR / "out_graph.hnsw")
     ipnsw_result: str = str(IPNSW_DIR / "result.txt")
     ipnsw_bin: str = str(IPNSW_DIR / "main")
-    ipnsw_m: int = 20
+    ipnsw_m: int = 32
     ipnsw_ef_construction: int = 500
     ipnsw_ef_values: list[int] = field(default_factory=lambda: [100, 200, 400, 600, 800, 1000, 1500, 2000])
 
@@ -104,9 +104,10 @@ class DatasetConfig:
             self.mag_efs = [100, 200, 400, 600, 800, 1000, 1200, 1500, 2000]
 
             self.scann_result = str(RESULTS_DIR / "result_scann_glove100.txt")
-            self.scann_mode = "leaves"
-            self.scann_leaves_values = [10, 20, 50, 100, 200, 500, 1000, 1500, 2000]
-            self.scann_reorder_values = [500]
+            self.scann_mode = "reorder"
+            self.scann_num_leaves = 2000
+            self.scann_leaves_to_search = 100
+            self.scann_reorder_values = [400, 500, 600, 800, 1000, 1500, 2000, 3000, 4000, 5000]
 
             self.ipnsw_graph = str(IPNSW_DIR / "out_graph_glove100.hnsw")
             self.ipnsw_result = str(IPNSW_DIR / "result_glove100.txt")

@@ -3,11 +3,12 @@
 
 from __future__ import annotations
 
+import os
 import re
 import subprocess
 from pathlib import Path
 
-from common import DatasetConfig
+from common import DatasetConfig, build_env_without_thread_limits
 
 
 def run(config: DatasetConfig):
@@ -25,12 +26,19 @@ def run(config: DatasetConfig):
 
     for i in range(run_times):
         print(f"[PAG] run {i + 1}/{run_times}: {script_path.name}")
+        # If index is missing, first run performs index build. Remove thread limits
+        # for that run; keep query run single-threaded via inherited env.
+        if run_times == 2 and i == 0:
+            env = build_env_without_thread_limits()
+        else:
+            env = os.environ.copy()
         result = subprocess.run(
             ["bash", script_path.name],
             cwd=config.pag_dir,
             check=True,
             capture_output=True,
             text=True,
+            env=env,
         )
         last_stdout = result.stdout
 

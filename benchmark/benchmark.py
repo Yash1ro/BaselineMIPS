@@ -50,6 +50,12 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run full benchmark pipeline")
     parser.add_argument("--dataset", default="music100", choices=["music100", "glove100"], help="Dataset name")
     parser.add_argument(
+        "--scann-mode",
+        default="reorder",
+        choices=["reorder", "leaves"],
+        help="ScaNN sweep mode",
+    )
+    parser.add_argument(
         "--algorithms",
         default="mag,scann,ipnsw,mobius,pag",
         help="Comma-separated algorithms to run",
@@ -63,6 +69,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     cfg = DatasetConfig(name=args.dataset)
+    cfg.scann_mode = args.scann_mode
 
     print("=" * 72)
     print("BENCHMARK PIPELINE")
