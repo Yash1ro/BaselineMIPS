@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
 import argparse
 import os
+import subprocess
 import re
 import struct
+import tempfile
+from pathlib import Path
 
 
 DATASET_DIM_HINTS = {
 	"book_corpus": 1024,
+	"dinov2": 768,
 	"glove": 100,
 	"music": 100,
 }
@@ -36,6 +40,44 @@ def guess_dim_from_num(size: int, num: int | None) -> int | None:
 	return dim if dim > 0 else None
 
 
+def strip_label_in_place(path: str, dim: int) -> tuple[int, int, str]:
+	"""Convert labeled records to raw float32 vectors and replace original file."""
+	tool_dir = Path(__file__).resolve().parent
+	convert_py = tool_dir / "convert.py"
+	if not convert_py.exists():
+		raise FileNotFoundError(f"convert.py not found: {convert_py}")
+
+	fd, tmp_path = tempfile.mkstemp(prefix="nolabel_", suffix=".bin", dir=os.path.dirname(path) or ".")
+	os.close(fd)
+	try:
+		cmd = [
+			"python3",
+			str(convert_py),
+			path,
+			tmp_path,
+			"--out-dim",
+			str(dim),
+			"--label-cols",
+			"1",
+			"--header",
+			"auto",
+		]
+		subprocess.run(cmd, check=True)
+
+		# Keep the original filename: replace source with converted tmp file.
+		os.replace(tmp_path, path)
+		size = os.path.getsize(path)
+		row_bytes = dim * 4
+		if size % row_bytes != 0:
+			raise ValueError(
+				f"converted file size mismatch: size={size}, dim={dim}, row_bytes={row_bytes}"
+			)
+		return size // row_bytes, dim, "raw-float32"
+	finally:
+		if os.path.exists(tmp_path):
+			os.remove(tmp_path)
+
+
 def infer_num_dim(path: str, raw_dim: int | None, num: int | None) -> tuple[int, int, str]:
 	size = os.path.getsize(path)
 	if size < 4:
@@ -53,9 +95,9 @@ def infer_num_dim(path: str, raw_dim: int | None, num: int | None) -> tuple[int,
 	if dim is None:
 		dim = guess_dim_from_num(size, num)
 	if dim is None:
-		dim = guess_dim_from_filename(path)
-	if dim is None:
 		dim = guess_dim_from_path(path)
+	if dim is None:
+		dim = guess_dim_from_filename(path)
 	if dim is None or dim <= 0:
 		raise ValueError(
 			"cannot infer dim for raw float32 bin. Please provide --dim or --num, "
@@ -64,6 +106,11 @@ def infer_num_dim(path: str, raw_dim: int | None, num: int | None) -> tuple[int,
 
 	row_bytes = dim * 4
 	if size % row_bytes != 0:
+		# Some datasets are stored as labeled records:
+		# [uint32 label][float32 * dim] per vector.
+		labeled_row_bytes = (dim + 1) * 4
+		if size % labeled_row_bytes == 0:
+			return strip_label_in_place(path, dim)
 		raise ValueError(
 			f"raw float32 size mismatch: size={size}, dim={dim}, row_bytes={row_bytes}"
 		)

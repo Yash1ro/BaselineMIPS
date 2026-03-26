@@ -49,10 +49,11 @@ class DatasetConfig:
     mag_efs: list[int] = field(default_factory=lambda: [100, 200, 400, 600, 800, 1000])
 
     scann_result: str = str(RESULTS_DIR / "result_scann.txt")
+    scann_distance: str = "dot_product"
     scann_mode: str = "reorder"
     scann_leaves_to_search: int = 100
     scann_reorder_values: list[int] = field(default_factory=lambda: [400, 500, 600, 800, 1000, 1500, 2000, 3000, 4000, 5000])
-    scann_leaves_values: list[int] = field(default_factory=lambda: [10, 20, 50, 100, 200, 500, 1000])
+    scann_leaves_values: list[int] = field(default_factory=lambda: [20, 50, 100, 200, 500, 1000])
     scann_num_leaves: int = 2000
 
     ipnsw_graph: str = str(IPNSW_DIR / "out_graph.hnsw")
@@ -104,6 +105,7 @@ class DatasetConfig:
             self.mag_efs = [100, 200, 400, 600, 800, 1000, 1200, 1500, 2000]
 
             self.scann_result = str(RESULTS_DIR / "result_scann_glove100.txt")
+            self.scann_distance = "dot_product"
             self.scann_mode = "reorder"
             self.scann_num_leaves = 2000
             self.scann_leaves_to_search = 100
@@ -118,6 +120,90 @@ class DatasetConfig:
             self.mobius_budget_values = [100, 150, 200, 300, 500, 1000, 1500, 2000, 3000]
 
             self.faiss_result = str(RESULTS_DIR / "result_faiss_glove100.txt")
+            return
+
+        if self.name == "dinov2":
+            self.dim = 768
+            self.top_k = 100
+            # Keep defaults aligned with common ImageNet-1K split;
+            # actual counts are updated from loaded arrays in benchmark.py.
+            self.db_size = 1281167
+            self.query_size = 50000
+
+            self.database_bin = str(DATA_DIR / "dinov2_base.bin")
+            self.query_bin = str(DATA_DIR / "dinov2_query.bin")
+            self.database_txt = str(DATA_DIR / "dinov2_base.txt")
+            self.query_txt = str(DATA_DIR / "dinov2_query.txt")
+
+            self.groundtruth_txt_top100 = str(DATA_DIR / "dinov2_truth.txt")
+            self.groundtruth_bin_top100 = str(DATA_DIR / "dinov2_truth.bin")
+
+            self.mag_knng = str(MAG_DIR / "dinov2.knng")
+            self.mag_index = str(MAG_DIR / "dinov2.mag")
+            self.mag_result = str(MAG_DIR / "result_mag_dinov2.txt")
+            self.mag_efs = [100, 200, 400, 600]
+
+            # DINOv2 in baseline.py is configured with L2 ground truth.
+            self.scann_result = str(RESULTS_DIR / "result_scann_dinov2.txt")
+            self.scann_distance = "squared_l2"
+            self.scann_mode = "reorder"
+            self.scann_num_leaves = 2000
+            self.scann_leaves_to_search = 100
+            self.scann_reorder_values = [200, 300, 500, 1000]
+
+            self.ipnsw_graph = str(IPNSW_DIR / "out_graph_dinov2.hnsw")
+            self.ipnsw_result = str(IPNSW_DIR / "result_dinov2.txt")
+            self.ipnsw_m = 32
+            self.ipnsw_ef_construction = 500
+            self.ipnsw_ef_values = [100, 200, 400, 600]
+
+            self.mobius_graph = str(MOBIUS_DIR / "bfsg_dinov2.graph")
+            self.mobius_data = str(MOBIUS_DIR / "bfsg_dinov2.data")
+            self.mobius_result = str(MOBIUS_DIR / "result_dinov2.txt")
+            self.mobius_budget_values = [50, 80, 100, 150, 200, 300, 500]
+
+            self.faiss_result = str(RESULTS_DIR / "result_faiss_dinov2.txt")
+            return
+
+        if self.name == "book_corpus":
+            self.dim = 1024
+            self.top_k = 100
+            # actual counts are updated from loaded arrays in benchmark.py.
+            self.db_size = 9250529
+            self.query_size = 10000
+
+            self.database_bin = str(DATA_DIR / "book_corpus_base.bin")
+            self.query_bin = str(DATA_DIR / "book_corpus_query.bin")
+            self.database_txt = str(DATA_DIR / "book_corpus_base.txt")
+            self.query_txt = str(DATA_DIR / "book_corpus_query.txt")
+
+            self.groundtruth_txt_top100 = str(DATA_DIR / "book_corpus_truth.txt")
+            self.groundtruth_bin_top100 = str(DATA_DIR / "book_corpus_truth.bin")
+
+            self.mag_knng = str(MAG_DIR / "book_corpus.knng")
+            self.mag_index = str(MAG_DIR / "book_corpus.mag")
+            self.mag_result = str(MAG_DIR / "result_mag_book_corpus.txt")
+            self.mag_efs = [100, 200, 400]
+
+            self.scann_result = str(RESULTS_DIR / "result_scann_book_corpus.txt")
+            self.scann_distance = "dot_product"
+            self.scann_mode = "reorder"
+            self.scann_num_leaves = 4000
+            self.scann_leaves_to_search = 200
+            self.scann_reorder_values = [200, 400, 800]
+
+            self.ipnsw_graph = str(IPNSW_DIR / "out_graph_book_corpus.hnsw")
+            self.ipnsw_result = str(IPNSW_DIR / "result_book_corpus.txt")
+            self.ipnsw_m = 32
+            self.ipnsw_ef_construction = 500
+            self.ipnsw_ef_values = [100, 200, 400]
+
+            self.mobius_graph = str(MOBIUS_DIR / "bfsg_book_corpus.graph")
+            self.mobius_data = str(MOBIUS_DIR / "bfsg_book_corpus.data")
+            self.mobius_result = str(MOBIUS_DIR / "result_book_corpus.txt")
+            self.mobius_budget_values = [80, 100, 150, 200]
+
+            self.faiss_result = str(RESULTS_DIR / "result_faiss_book_corpus.txt")
             return
 
         raise ValueError(f"Unsupported dataset: {self.name}")

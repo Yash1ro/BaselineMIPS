@@ -48,7 +48,7 @@ def run_algorithm(name: str, cfg, database, queries, ground_truth):
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run full benchmark pipeline")
-    parser.add_argument("--dataset", default="music100", choices=["music100", "glove100"], help="Dataset name")
+    parser.add_argument("--dataset", default="music100", choices=["music100", "glove100", "dinov2", "book_corpus"], help="Dataset name")
     parser.add_argument(
         "--scann-mode",
         default="reorder",
@@ -83,6 +83,8 @@ def main() -> None:
     print("\n[1/4] Loading data...")
     database = read_bin(cfg.database_bin, cfg.dim)
     queries = read_bin(cfg.query_bin, cfg.dim)
+    cfg.db_size = int(database.shape[0])
+    cfg.query_size = int(queries.shape[0])
     ground_truth = load_dataset_groundtruth(cfg)
     print(f"Database shape: {database.shape}")
     print(f"Query shape   : {queries.shape}")

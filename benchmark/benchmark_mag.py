@@ -72,8 +72,7 @@ def run(config: DatasetConfig, ground_truth):
     """Run MAG recall-QPS sweep across efs values."""
     points = []
     if not ensure_mag_index(config):
-        print("[MAG] index unavailable, skip")
-        return points
+        raise RuntimeError("[MAG] index unavailable")
 
     for efs in config.mag_efs:
         start = time.time()

@@ -20,7 +20,8 @@ def run(config: DatasetConfig):
         return []
 
     index_dir = pag_dir / config.name / "index"
-    run_times = 1 if index_dir.exists() else 2
+    has_index = index_dir.exists() and index_dir.is_dir() and any(index_dir.iterdir())
+    run_times = 1 if has_index else 2
     points = []
     last_stdout = ""
 
