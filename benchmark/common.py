@@ -44,7 +44,7 @@ class DatasetConfig:
     mag_knng: str = str(MAG_DIR / "music100.knng")
     mag_index: str = str(MAG_DIR / "music100.mag")
     mag_result: str = str(MAG_DIR / "result_mag.txt")
-    mag_build_knng_py: str = str(MAG_DIR / "build_knng.py")
+    mag_build_knng_py: str = str(BENCHMARK_DIR / "tools" / "build_knng.py")
     mag_test_bin: str = str(MAG_DIR / "build" / "test" / "test_mag")
     mag_efs: list[int] = field(default_factory=lambda: [100, 200, 400, 600, 800, 1000])
 
@@ -74,6 +74,9 @@ class DatasetConfig:
     mobius_budget_values: list[int] = field(default_factory=lambda: [50, 80, 100, 150, 200, 300, 500, 800, 1000])
 
     pag_dir: str = str(PAG_DIR)
+    pag_hnsw_efc: int = 500
+    pag_hnsw_M: int = 32
+    pag_hnsw_L: int = 32
 
     faiss_result: str = str(RESULTS_DIR / "result_faiss_ivfpq.txt")
     faiss_nlist: int = 4000
@@ -119,6 +122,10 @@ class DatasetConfig:
             self.mobius_result = str(MOBIUS_DIR / "result_glove100.txt")
             self.mobius_budget_values = [100, 150, 200, 300, 500, 1000, 1500, 2000, 3000]
 
+            self.pag_hnsw_efc = 500
+            self.pag_hnsw_M = 32
+            self.pag_hnsw_L = 16
+
             self.faiss_result = str(RESULTS_DIR / "result_faiss_glove100.txt")
             return
 
@@ -162,6 +169,10 @@ class DatasetConfig:
             self.mobius_result = str(MOBIUS_DIR / "result_dinov2.txt")
             self.mobius_budget_values = [50, 80, 100, 150, 200, 300, 500]
 
+            self.pag_hnsw_efc = 500
+            self.pag_hnsw_M = 32
+            self.pag_hnsw_L = 16
+
             self.faiss_result = str(RESULTS_DIR / "result_faiss_dinov2.txt")
             return
 
@@ -183,25 +194,29 @@ class DatasetConfig:
             self.mag_knng = str(MAG_DIR / "book_corpus.knng")
             self.mag_index = str(MAG_DIR / "book_corpus.mag")
             self.mag_result = str(MAG_DIR / "result_mag_book_corpus.txt")
-            self.mag_efs = [100, 200, 400]
+            self.mag_efs = [100, 200, 400, 500, 1000, 1500, 2000]
 
             self.scann_result = str(RESULTS_DIR / "result_scann_book_corpus.txt")
             self.scann_distance = "dot_product"
             self.scann_mode = "reorder"
             self.scann_num_leaves = 4000
             self.scann_leaves_to_search = 200
-            self.scann_reorder_values = [200, 400, 800]
+            self.scann_reorder_values = [100, 200, 400, 800, 1000, 1500, 2000]
 
             self.ipnsw_graph = str(IPNSW_DIR / "out_graph_book_corpus.hnsw")
             self.ipnsw_result = str(IPNSW_DIR / "result_book_corpus.txt")
             self.ipnsw_m = 32
             self.ipnsw_ef_construction = 500
-            self.ipnsw_ef_values = [100, 200, 400]
+            self.ipnsw_ef_values = [100, 200, 400, 500, 1000, 1500, 3000]
 
             self.mobius_graph = str(MOBIUS_DIR / "bfsg_book_corpus.graph")
             self.mobius_data = str(MOBIUS_DIR / "bfsg_book_corpus.data")
             self.mobius_result = str(MOBIUS_DIR / "result_book_corpus.txt")
-            self.mobius_budget_values = [80, 100, 150, 200]
+            self.mobius_budget_values = [80, 100, 150, 200, 500, 1000 ,1500, 2000]
+
+            self.pag_hnsw_efc = 2000
+            self.pag_hnsw_M = 64
+            self.pag_hnsw_L = 16
 
             self.faiss_result = str(RESULTS_DIR / "result_faiss_book_corpus.txt")
             return

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import datetime
 from collections import defaultdict
 from pathlib import Path
 
@@ -12,10 +13,35 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 
-def save_results(points: list[dict], output_txt: str = "result.txt") -> None:
-    """Save flat benchmark points to tab-separated txt."""
+def save_results(
+    points: list[dict],
+    output_txt: str = "result.txt",
+    metadata: dict | None = None,
+) -> None:
+    """Save flat benchmark points to tab-separated txt with optional metadata header.
+
+    Metadata is written as ``# key: value`` comment lines before the data header so
+    that the file remains backward-compatible with readers that skip ``#`` lines.
+
+    ``metadata`` may contain the following keys:
+      - ``dataset``   : dataset name
+      - ``db_size``   : number of database vectors
+      - ``dim``       : vector dimension
+      - ``query_size``: number of query vectors
+      - ``timestamp`` : ISO-8601 timestamp string
+      - ``params``    : dict mapping algorithm name → dict of param key/value pairs
+    """
     Path(output_txt).parent.mkdir(parents=True, exist_ok=True)
     with open(output_txt, "w", encoding="utf-8") as f:
+        if metadata:
+            for key in ("dataset", "db_size", "dim", "query_size", "timestamp"):
+                if key in metadata:
+                    f.write(f"# {key}: {metadata[key]}\n")
+            if "params" in metadata:
+                for algo, params in metadata["params"].items():
+                    f.write(f"# --- params:{algo} ---\n")
+                    for k, v in sorted(params.items()):
+                        f.write(f"# {k}: {v}\n")
         f.write("algorithm\tbudget\trecall\tqps\n")
         for p in points:
             f.write(
@@ -25,15 +51,24 @@ def save_results(points: list[dict], output_txt: str = "result.txt") -> None:
 
 
 def load_results(input_txt: str) -> list[dict]:
-    """Load tab-separated benchmark points from txt."""
+    """Load tab-separated benchmark points from txt.
+
+    Lines starting with ``#`` are treated as metadata comments and skipped,
+    which makes this function compatible with both the legacy format (no
+    comments) and the new format (metadata comment header).
+    """
     points: list[dict] = []
     with open(input_txt, "r", encoding="utf-8") as f:
-        header = f.readline().strip().split("\t")
-        if header != ["algorithm", "budget", "recall", "qps"]:
-            raise ValueError(f"Unexpected header in {input_txt}: {header}")
+        header_found = False
         for line in f:
             text = line.strip()
-            if not text:
+            if not text or text.startswith("#"):
+                continue
+            if not header_found:
+                header = text.split("\t")
+                if header != ["algorithm", "budget", "recall", "qps"]:
+                    raise ValueError(f"Unexpected header in {input_txt}: {header}")
+                header_found = True
                 continue
             algo, budget, recall, qps = text.split("\t")
             points.append(
@@ -45,6 +80,76 @@ def load_results(input_txt: str) -> list[dict]:
                 }
             )
     return points
+
+
+def _read_raw_file(input_txt: str) -> tuple[list[str], list[dict]]:
+    """Read a result file preserving raw comment lines and parsed data points.
+
+    Returns ``(comment_lines, points)`` where *comment_lines* are the raw ``#``
+    header lines (including newlines) and *points* is the parsed data.
+    """
+    comment_lines: list[str] = []
+    points: list[dict] = []
+    with open(input_txt, "r", encoding="utf-8") as f:
+        header_found = False
+        for line in f:
+            stripped = line.rstrip("\n").strip()
+            if stripped.startswith("#"):
+                comment_lines.append(line if line.endswith("\n") else line + "\n")
+                continue
+            if not stripped:
+                continue
+            if not header_found:
+                if stripped == "algorithm\tbudget\trecall\tqps":
+                    header_found = True
+                continue
+            algo, budget, recall, qps = stripped.split("\t")
+            points.append(
+                {
+                    "algorithm": algo,
+                    "budget": budget,
+                    "recall": float(recall),
+                    "qps": float(qps),
+                }
+            )
+    return comment_lines, points
+
+
+def update_algorithm_section(
+    new_points: list[dict],
+    algorithm: str,
+    output_txt: str,
+) -> None:
+    """Replace only the rows for *algorithm* in an existing result file.
+
+    All ``#`` metadata comment lines are preserved.  The ``# timestamp:`` line
+    is updated to the current time to reflect when the file was last modified.
+    All other algorithms' rows are left untouched.
+    """
+    comment_lines, existing_points = _read_raw_file(output_txt)
+
+    # Replace rows belonging to the target algorithm.
+    kept = [p for p in existing_points if p["algorithm"] != algorithm]
+    kept.extend(new_points)
+
+    # Refresh the timestamp comment.
+    ts = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+    updated_comments: list[str] = []
+    for line in comment_lines:
+        if line.startswith("# timestamp:"):
+            updated_comments.append(f"# timestamp: {ts}\n")
+        else:
+            updated_comments.append(line)
+
+    with open(output_txt, "w", encoding="utf-8") as f:
+        for line in updated_comments:
+            f.write(line)
+        f.write("algorithm\tbudget\trecall\tqps\n")
+        for p in kept:
+            f.write(
+                f"{p['algorithm']}\t{p['budget']}\t{float(p['recall']):.8f}\t{float(p['qps']):.6f}\n"
+            )
+    print(f"Updated {len(new_points)} {algorithm} rows in {output_txt}")
 
 
 def plot_results(

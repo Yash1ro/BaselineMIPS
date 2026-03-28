@@ -16,7 +16,7 @@ from common import (
 )
 
 
-def ensure_mag_knng(config: DatasetConfig, knng_k: int = 50) -> bool:
+def ensure_mag_knng(config: DatasetConfig, knng_k: int = 100) -> bool:
     if file_nonempty(config.mag_knng):
         return True
 
