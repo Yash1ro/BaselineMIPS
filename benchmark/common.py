@@ -129,6 +129,47 @@ class DatasetConfig:
             self.faiss_result = str(RESULTS_DIR / "result_faiss_glove100.txt")
             return
 
+        if self.name == "glove200":
+            self.dim = 200
+            self.top_k = 100
+            self.db_size = 1183514
+            self.query_size = 10000
+
+            self.database_bin = str(DATA_DIR / "glove200_base.bin")
+            self.query_bin = str(DATA_DIR / "glove200_query.bin")
+            self.database_txt = str(DATA_DIR / "glove200_base.txt")
+            self.query_txt = str(DATA_DIR / "glove200_query.txt")
+
+            self.groundtruth_txt_top100 = str(DATA_DIR / "glove200_truth.bin")
+            self.groundtruth_bin_top100 = str(DATA_DIR / "glove200_truth.bin")
+
+            self.mag_knng = str(MAG_DIR / "glove200.knng")
+            self.mag_index = str(MAG_DIR / "glove200.mag")
+            self.mag_result = str(MAG_DIR / "result_mag_glove200.txt")
+            self.mag_efs = [100, 200, 400, 600, 800, 1000, 1200, 1500, 2000]
+
+            self.scann_result = str(RESULTS_DIR / "result_scann_glove200.txt")
+            self.scann_distance = "dot_product"
+            self.scann_mode = "reorder"
+            self.scann_num_leaves = 2000
+            self.scann_leaves_to_search = 100
+            self.scann_reorder_values = [400, 500, 600, 800, 1000, 1500, 2000, 3000, 4000, 5000]
+
+            self.ipnsw_graph = str(IPNSW_DIR / "out_graph_glove200.hnsw")
+            self.ipnsw_result = str(IPNSW_DIR / "result_glove200.txt")
+
+            self.mobius_graph = str(MOBIUS_DIR / "bfsg_glove200.graph")
+            self.mobius_data = str(MOBIUS_DIR / "bfsg_glove200.data")
+            self.mobius_result = str(MOBIUS_DIR / "result_glove200.txt")
+            self.mobius_budget_values = [100, 150, 200, 300, 500, 1000, 1500, 2000, 3000]
+
+            self.pag_hnsw_efc = 500
+            self.pag_hnsw_M = 32
+            self.pag_hnsw_L = 16
+
+            self.faiss_result = str(RESULTS_DIR / "result_faiss_glove200.txt")
+            return
+
         if self.name == "dinov2":
             self.dim = 768
             self.top_k = 100
