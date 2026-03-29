@@ -1,0 +1,13 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Built binary
+mobius
+
+# Generated graph/index artifacts
+bfsg*.data
+bfsg*.graph
+
+# Benchmark outputs
+result*.txt

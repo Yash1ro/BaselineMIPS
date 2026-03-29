@@ -1,0 +1,18 @@
+# Build artifacts
+build/
+
+# Generated MAG/KNNG data
+*.knng
+*.mag
+
+# Benchmark outputs
+result_mag*.txt
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Editor/system files
+.vscode/
+.idea/
+.DS_Store

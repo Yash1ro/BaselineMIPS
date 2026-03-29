@@ -1,0 +1,44 @@
+# Workspace/editor
+.vscode/
+.idea/
+.DS_Store
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Common experiment outputs
+log/
+result/
+benchmark/imgs/
+benchmark/results/
+
+# Large generated data artifacts
+*.hnsw
+*.knng
+*.mag
+
+# ipnsw generated files
+ip-nsw/CMakeCache.txt
+ip-nsw/CMakeFiles/
+ip-nsw/Makefile
+ip-nsw/cmake_install.cmake
+ip-nsw/main
+ip-nsw/out_graph_*.hnsw
+ip-nsw/result*.txt
+
+# mobius generated files
+mobius/__pycache__/
+mobius/mobius
+mobius/bfsg*.data
+mobius/bfsg*.graph
+mobius/result*.txt
+
+# MAG generated files
+MAG/build/
+MAG/*.knng
+MAG/*.mag
+MAG/result_mag*.txt
+
+# Embedded git backups (if nested repos are detached)
+**/.git_embedded_backup/

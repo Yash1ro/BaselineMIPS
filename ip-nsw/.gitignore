@@ -1,0 +1,12 @@
+# CMake/Make build artifacts
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# Built binary
+main
+
+# Generated graphs and benchmark outputs
+out_graph_*.hnsw
+result*.txt
