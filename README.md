@@ -10,8 +10,7 @@ MIPS（Maximum Inner Product Search）算法基准测试框架，包含 7 种近
 | **ScaNN** | (in-memory) | 各向异性向量量化 | — |
 | **ip-NSW** | `ip-nsw/` | 内积导航小世界图 | NeurIPS 2018 |
 | **Möbius-Graph** | `mobius/` | Möbius 变换图搜索 | NeurIPS 2019 |
-| **PAG** | `PAG/` | 基于投影的 ANN 图 | — |
-| **PIF-PAG** | `PAG_new/` | PAG 改进版 (PIF-PAG) | — |
+| **PIF-PAG** | `PAG_new/` | PAG 改进版 | — |
 | **PAG-only** | `PAG_without_projection/` | PAG 无投影变体 | — |
 | **Faiss IVF-PQ** | (in-memory) | 倒排文件 + 乘积量化 | — |
 
@@ -160,7 +159,7 @@ python benchmark/run_full_benchmark.py --scann-mode leaves
 | 参数 | 默认值 | 说明 |
 |------|--------|------|
 | `--datasets` | 全部 5 个 | 要测试的数据集（music100 glove100 glove200 dinov2 book_corpus） |
-| `--algorithms` | 全部 5 个 | 要测试的算法（mag scann ipnsw mobius pag） |
+| `--algorithms` | 全部算法 | 要测试的算法（mag scann ipnsw mobius pag_new pag_without_projection） |
 | `--top-ks` | `10 100 500` | 要测试的 top-K 值 |
 | `--skip-gt-gen` | 关闭 | 缺少 top-K > 100 的 groundtruth 时跳过而非暴力生成 |
 | `--scann-mode` | `reorder` | ScaNN 参数扫描模式（reorder / leaves） |
@@ -184,7 +183,7 @@ python benchmark/run_full_benchmark.py --scann-mode leaves
 │  scann             9.1s     1352 MB      907 MB  │  R=0.9711@400  R=0.9804@5000
 │  ipnsw         (cached)           -     1192 MB  │  R=0.9905@100  R=0.9999@2000
 │  mobius        (cached)           -     1451 MB  │  R=0.9626@50   R=0.9987@1000
-│  pag               9.9s     2423 MB     1366 MB  │  R=0.0007@10   R=0.0006@990
+│  pag_new            9.9s     2423 MB     1366 MB  │  R=0.0007@10   R=0.0006@990
 │
 └──────────────────────────────────────────────────────────────────────┘
 ```
@@ -219,13 +218,13 @@ python benchmark/tools/result_plot.py \
 #### `benchmark/benchmark.py`
 
 - 作用：单数据集基准测试主入口。可运行一个或多个算法，生成/更新结果文件并作图。
-- 典型命令：`python benchmark/benchmark.py --dataset music100 --algorithms mag,scann,ipnsw,mobius,pag`
+- 典型命令：`python benchmark/benchmark.py --dataset music100 --algorithms mag,scann,ipnsw,mobius,pag_new,pag_without_projection`
 
 | 参数 | 默认值 | 说明 |
 |------|--------|------|
 | `--dataset` | `music100` | 数据集名称。可选：`music100`/`glove100`/`glove200`/`dinov2`/`book_corpus`。 |
 | `--scann-mode` | `reorder` | ScaNN 扫描模式。可选：`reorder`（扫 `reorder`）/`leaves`（扫 `leaves_to_search`）。 |
-| `--algorithms` | `mag,scann,ipnsw,mobius,pag` | 逗号分隔算法列表。`mag`=MAG, `scann`=ScaNN, `ipnsw`=ip-NSW（官方）, `mobius`=Möbius-Graph（官方）, `pag`=PAG, `pag_new`=PIF-PAG, `pag_without_projection`=PAG-only。 |
+| `--algorithms` | `mag,scann,ipnsw,mobius,pag_new,pag_without_projection` | 逗号分隔算法列表。`mag`=MAG, `scann`=ScaNN, `ipnsw`=ip-NSW（官方）, `mobius`=Möbius-Graph（官方）, `pag_new`=PIF-PAG, `pag_without_projection`=PAG-only。 |
 | `--result-txt` | `None` | 结果文件路径。为空时自动选择路径：单算法优先更新最新文件，多算法/全量会创建带时间戳新文件。 |
 | `--plot` | `None` | 输出图片路径。为空时默认到 `benchmark/imgs/{dataset}_top{K}.png`。 |
 | `--title` | `None` | 图标题。为空时使用默认标题。 |
@@ -239,29 +238,29 @@ python benchmark/tools/result_plot.py \
 | 参数 | 默认值 | 说明 |
 |------|--------|------|
 | `--datasets` | 全部数据集 | 要测试的数据集列表。当前集合：`music100 glove100 glove200 dinov2 book_corpus gist1m ir101 openai1536`。 |
-| `--algorithms` | 全部算法 | 要测试的算法列表。当前集合：`mag`=MAG, `scann`=ScaNN, `ipnsw`=ip-NSW（官方）, `mobius`=Möbius-Graph（官方）, `pag`=PAG, `pag_new`=PIF-PAG, `pag_without_projection`=PAG-only。 |
+| `--algorithms` | 全部算法 | 要测试的算法列表。当前集合：`mag`=MAG, `scann`=ScaNN, `ipnsw`=ip-NSW（官方）, `mobius`=Möbius-Graph（官方）, `pag_new`=PIF-PAG, `pag_without_projection`=PAG-only。 |
 | `--top-ks` | `10 100 500` | 要测试的 top-K 列表。 |
 | `--skip-gt-gen` | 关闭 | 当 top-K>100 且缺少预计算 GT 时，跳过该组合（不做暴力 GT 生成）。 |
 | `--scann-mode` | `reorder` | ScaNN 模式：`reorder` 或 `leaves`。 |
 
 #### `benchmark/run_pag_comparison.py`
 
-- 作用：专门比较 PAG 三个变体（`pag`/`pag_new`/`pag_without_projection`），并更新对比图与结果。
+- 作用：比较 PAG 变体（`pag_new`/`pag_without_projection`），并更新对比图与结果。（注意：基础 PAG 未上传，仅支持 PIF-PAG 和 PAG-only。）
 
 | 参数 | 默认值 | 说明 |
 |------|--------|------|
-| `--datasets` | 全部 PAG 支持数据集 | 参与对比的数据集列表。 |
+| `--datasets` | 全部数据集 | 参与对比的数据集列表。 |
 | `--top-ks` | `10 100` | 参与对比的 top-K 列表。 |
-| `--variants` | `pag pag_new pag_without_projection` | 选择要跑的 PAG 变体。 |
+| `--variants` | `pag_new pag_without_projection` | 选择要跑的 PAG 变体。 |
 | `--skip-index-build` | 关闭 | 仅执行 query；若某变体索引不存在则跳过，不触发建索引。 |
 
 #### `benchmark/rerun_pag_queries.py`
 
-- 作用：对指定数据集重新执行 PAG query（默认 top-10），可在已有索引上快速复测并输出结果文件。
+- 作用：对指定数据集重新执行 PAG 变体 query（默认 top-10），可在已有索引上快速复测并输出结果文件。（注意：基础 PAG 未上传，仅支持 PIF-PAG 和 PAG-only。）
 
 | 参数 | 默认值 | 说明 |
 |------|--------|------|
-| `--datasets` | 全部数据集 | 要重跑 PAG query 的数据集列表。 |
+| `--datasets` | 全部数据集 | 要重跑 PAG 变体 query 的数据集列表。 |
 
 #### `benchmark/generate_top10_plots.py`
 
@@ -270,7 +269,7 @@ python benchmark/tools/result_plot.py \
 | 参数 | 默认值 | 说明 |
 |------|--------|------|
 | `--result-rank` | `1` | 按时间倒序选择第 N 新的结果文件（`1`=最新，`2`=次新）。 |
-| `--prefer-algorithm` | `None` | 只优先选择包含该算法的结果文件（例如 `pag`）；找不到时可回退。 |
+| `--prefer-algorithm` | `None` | 只优先选择包含该算法的结果文件（例如 `pag_new`）；找不到时可回退。 |
 
 #### `benchmark/plot_statistics_metrics.py`
 
@@ -282,12 +281,12 @@ python benchmark/tools/result_plot.py \
 
 #### `benchmark/run_large_datasets.py`
 
-- 作用：对大数据集（当前固定 `ir101` 与 `book_corpus`）执行 PAG 变体测试，并在每轮后清理索引以节省磁盘。
+- 作用：对大数据集（当前固定 `ir101` 与 `book_corpus`）执行 PAG 变体（PIF-PAG / PAG-only）测试，并在每轮后清理索引以节省磁盘。
 - 参数：无 CLI 参数（当前通过脚本常量控制：`DATASETS`、`TOP_K`、`VARIANTS`）。
 
 #### `benchmark/run_pag_and_plot.py`
 
-- 作用：对所有数据集重跑 PAG（要求索引已存在），写入新结果文件并自动调用 `generate_top10_plots.py` 生成图。
+- 作用：对所有数据集重跑 PAG 变体（要求索引已存在），写入新结果文件并自动调用 `generate_top10_plots.py` 生成图。
 - 参数：无 CLI 参数（当前通过脚本常量控制：`ALL_DATASETS`，以及固定 `top10` 流程）。
 
 ### 2) 内部算法模块（通常由主脚本调用）
@@ -300,9 +299,8 @@ python benchmark/tools/result_plot.py \
 | `benchmark/benchmark_scann.py` | ScaNN 参数扫（`reorder` 或 `leaves`） | `run(config, database, queries, ground_truth)` |
 | `benchmark/benchmark_ipnsw.py` | **ip-NSW**（官方实现）参数扫（`efSearch`） | `run(config, ground_truth)` |
 | `benchmark/benchmark_mobius.py` | **Möbius-Graph**（官方实现）参数扫（`search_budget`） | `run(config, ground_truth)` |
-| `benchmark/benchmark_pag.py` | PAG 脚本执行与输出解析 | `run(config)` |
-| `benchmark/benchmark_pag_new.py` | PAG_new 脚本执行与输出解析 | `run(config)` |
-| `benchmark/benchmark_pag_without_projection.py` | PAG_without_projection 脚本执行与输出解析 | `run(config)` |
+| `benchmark/benchmark_pag_new.py` | PIF-PAG 脚本执行与输出解析 | `run(config)` |
+| `benchmark/benchmark_pag_without_projection.py` | PAG-only 脚本执行与输出解析 | `run(config)` |
 | `benchmark/benchmark_faiss.py` | FAISS IVF-PQ 参数扫（`nprobe`） | `run(config, database, queries, ground_truth)` |
 
 ### 3) 这些模块的“参数从哪里来”
@@ -316,8 +314,7 @@ python benchmark/tools/result_plot.py \
 | ScaNN | `scann_distance` `scann_mode` `scann_num_leaves` `scann_leaves_to_search` `scann_reorder_values` `scann_leaves_values` | ScaNN 建索引与查询扫描参数。 |
 | ip-NSW | `ipnsw_m` `ipnsw_ef_construction` `ipnsw_ef_values` | 图构建与查询参数。 |
 | Mobius | `mobius_budget_values` | Mobius 查询预算扫描列表。 |
-| PAG | `pag_run_script` `pag_hnsw_efc` `pag_hnsw_M` `pag_hnsw_L` | PAG 运行脚本与图参数。 |
-| PAG 变体 | `pag_new_run_script` `pag_without_proj_run_script` | PAG_new / 无投影 PAG 的运行脚本名。 |
+| PAG 变体 | `pag_new_run_script` `pag_new_hnsw_efc` `pag_new_hnsw_M` `pag_new_hnsw_L` `pag_without_proj_run_script` | PIF-PAG / PAG-only 的运行脚本与图参数。 |
 | FAISS | `faiss_nlist` `faiss_nprobe_values` `faiss_m` `faiss_nbits` | IVF-PQ 构建与查询参数。 |
 
 > 说明：不同数据集在 `DatasetConfig.__post_init__` 中会覆盖默认值（如维度、数据路径、参数扫描范围）。
