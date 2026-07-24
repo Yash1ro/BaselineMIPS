@@ -18,6 +18,19 @@ MIPS（Maximum Inner Product Search）算法基准测试框架，包含 7 种近
 - **ip-NSW** 是官方实现，来自 NIPS 2018 论文 *"Non-metric Similarity Graphs for Maximum Inner Product Search"* (Morozov & Babenko)，基于 [hnswlib](https://github.com/nmslib/hnswlib)。
 - **Möbius-Graph** 是官方实现，来自 NeurIPS 2019 论文 *"Möbius Transformation for Fast Inner Product Search on Graph"*，底层图搜索基于 [SONG](https://github.com/sunbelbd/song)。
 
+### 数据集
+
+| 数据集名 | CLI 参数 | 规模 | 维度 |
+|----------|----------|------|------|
+| Msong | `msong` | 1M | 784 |
+| Music-100 | `music100` | 1M | 100 |
+| GIST-1M | `gist1m` | 1M | 960 |
+| GloVe-100 | `glove100` | 1.2M | 100 |
+| GloVe-200 | `glove200` | 1.2M | 200 |
+| DINOv2 | `dinov2` | 1.3M | 768 |
+| BookCorpus | `book_corpus` | 17M | 1024 |
+| Text2Image-10M | `text2img10m` | 10M | 200 |
+
 ## 环境配置与使用方法
 
 ### 环境配置
@@ -84,6 +97,9 @@ python benchmark/benchmark.py --dataset glove100
 python benchmark/benchmark.py --dataset glove200
 python benchmark/benchmark.py --dataset dinov2
 python benchmark/benchmark.py --dataset book_corpus
+python benchmark/benchmark.py --dataset msong
+python benchmark/benchmark.py --dataset gist1m
+python benchmark/benchmark.py --dataset text2img10m
 ```
 
 单算法运行（更新最新结果文件）：
@@ -109,7 +125,7 @@ python benchmark/benchmark.py --dataset music100 --result-txt /path/to/my_result
 
 | 参数 | 默认值 | 说明 |
 |------|--------|------|
-| `--dataset` | `music100` | 数据集（music100 / glove100 / glove200 / dinov2 / book_corpus） |
+| `--dataset` | `music100` | 数据集：music100 / glove100 / glove200 / dinov2 / book_corpus / msong / gist1m / text2img10m |
 | `--algorithms` | `mag,scann,ipnsw,mobius,pag_new,pag_without_projection` | 逗号分隔算法列表 |
 | `--result-txt` | 自动生成 | 结果文件路径 |
 | `--plot` | 自动生成 | 输出图片路径 |
@@ -146,7 +162,7 @@ python benchmark/run_full_benchmark.py --scann-mode leaves
 
 | 参数 | 默认值 | 说明 |
 |------|--------|------|
-| `--datasets` | 全部数据集 | music100 glove100 glove200 dinov2 book_corpus gist1m ir101 openai1536 |
+| `--datasets` | 全部 8 个数据集 | Msong / Music / GIST / GloVe100 / GloVe200 / DINOv2 / BookCorpus / Text2Image |
 | `--algorithms` | 全部算法 | mag scann ipnsw mobius pag_new pag_without_projection |
 | `--top-ks` | `10 100 500` | 要测试的 top-K 值 |
 | `--skip-gt-gen` | 关闭 | 缺少 GT 时跳过而非暴力生成 |

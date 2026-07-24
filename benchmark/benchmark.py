@@ -95,7 +95,10 @@ def find_latest_result_file(dataset: str) -> Path | None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run full benchmark pipeline")
-    parser.add_argument("--dataset", default="music100", choices=["music100", "glove100", "glove200", "dinov2", "book_corpus"], help="Dataset name")
+    parser.add_argument("--dataset", default="music100",
+                        choices=["music100", "glove100", "glove200", "dinov2", "book_corpus",
+                                 "gist1m", "msong", "text2img10m", "ir101", "openai1536", "word2vec"],
+                        help="Dataset name")
     parser.add_argument(
         "--scann-mode",
         default="reorder",
