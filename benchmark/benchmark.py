@@ -35,7 +35,6 @@ RUNNER_MODULES = {
     "scann": "benchmark_scann",
     "ipnsw": "benchmark_ipnsw",
     "mobius": "benchmark_mobius",
-    "pag": "benchmark_pag",
 }
 
 # DatasetConfig field names that carry sweep / tuning parameters for each algo.
@@ -51,7 +50,6 @@ ALGO_PARAM_FIELDS: dict[str, list[str]] = {
     ],
     "ipnsw": ["ipnsw_m", "ipnsw_ef_construction", "ipnsw_ef_values"],
     "mobius": ["mobius_budget_values"],
-    "pag": ["pag_hnsw_efc", "pag_hnsw_M", "pag_hnsw_L"],
 }
 
 
@@ -59,8 +57,6 @@ def run_algorithm(name: str, cfg, database, queries, ground_truth):
     mod = importlib.import_module(RUNNER_MODULES[name])
     if name in {"mag", "ipnsw", "mobius"}:
         return mod.run(cfg, ground_truth)
-    if name == "pag":
-        return mod.run(cfg)
     return mod.run(cfg, database, queries, ground_truth)
 
 

@@ -77,7 +77,7 @@ ALL_DATASETS = [
     "msong",
     "text2img10m",
 ]
-ALL_ALGORITHMS = ["mag", "scann", "ipnsw", "mobius", "pag", "pag_new", "pag_without_projection"]
+ALL_ALGORITHMS = ["mag", "scann", "ipnsw", "mobius", "pag_new", "pag_without_projection"]
 ALL_TOP_KS = [10, 100, 500]
 
 # Optional dataset-specific restrictions.
@@ -93,7 +93,6 @@ RUNNER_MODULES = {
     "scann": "benchmark_scann",
     "ipnsw": "benchmark_ipnsw",
     "mobius": "benchmark_mobius",
-    "pag": "benchmark_pag",
     "pag_new": "benchmark_pag_new",
     "pag_without_projection": "benchmark_pag_without_projection",
 }
@@ -418,7 +417,7 @@ def run_algorithm(name: str, cfg: DatasetConfig, database, queries, ground_truth
     mod = importlib.import_module(RUNNER_MODULES[name])
     if name in {"mag", "ipnsw", "mobius"}:
         return mod.run(cfg, ground_truth)
-    if name in {"pag", "pag_new", "pag_without_projection"}:
+    if name in {"pag_new", "pag_without_projection"}:
         return mod.run(cfg)
     return mod.run(cfg, database, queries, ground_truth)
 
@@ -607,7 +606,6 @@ def clean_indexes_for_dataset(dataset: str, algorithms: list[str], top_ks: list[
             removed += int(_remove_index_path(path, allowed_roots))
 
     pag_variants = [
-        ("pag", cfg.pag_dir, cfg.name, "index"),
         ("pag_new", cfg.pag_new_dir, f"index_new_{cfg.name}", None),
         (
             "pag_without_projection",
