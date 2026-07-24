@@ -21,16 +21,16 @@ MIPS（Maximum Inner Product Search）算法基准测试框架，包含 7 种近
 
 ### 数据集
 
-| 数据集名 | CLI 参数 | 规模 | 维度 |
-|----------|----------|------|------|
-| Msong | `msong` | 1M | 784 |
-| Music-100 | `music100` | 1M | 100 |
-| GIST-1M | `gist1m` | 1M | 960 |
-| GloVe-100 | `glove100` | 1.2M | 100 |
-| GloVe-200 | `glove200` | 1.2M | 200 |
-| DINOv2 | `dinov2` | 1.3M | 768 |
-| BookCorpus | `book_corpus` | 17M | 1024 |
-| Text2Image-10M | `text2img10m` | 10M | 200 |
+| 数据集名 | CLI 参数 | 规模 | 维度 | 查询数 |
+|----------|----------|------|------|--------|
+| Msong | `msong` | 994K | 420 | 1,000 |
+| Music-100 | `music100` | 1M | 100 | 10,000 |
+| GIST-1M | `gist1m` | 1M | 960 | 1,000 |
+| GloVe-100 | `glove100` | 1.18M | 100 | 10,000 |
+| GloVe-200 | `glove200` | 1.18M | 200 | 10,000 |
+| DINOv2 | `dinov2` | 1.28M | 768 | 50,000 |
+| BookCorpus | `book_corpus` | 9.25M | 1024 | 10,000 |
+| Text2Image-10M | `text2img10m` | 10M | 200 | 100,000 |
 
 ## 环境配置与使用方法
 
