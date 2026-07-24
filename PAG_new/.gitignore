@@ -1,0 +1,18 @@
+build/
+cmake-build-*/
+
+# Local datasets, generated indexes, and benchmark outputs
+assets/
+*.bin
+run*.sh
+*.log
+
+# Compiled objects/libraries/executables
+*.o
+*.a
+PEOs
+libpeos.a
+
+# Editor/OS files
+.DS_Store
+*.swp
