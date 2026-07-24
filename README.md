@@ -12,7 +12,6 @@ MIPS（Maximum Inner Product Search）算法基准测试框架，包含 7 种近
 | **Möbius-Graph** | `mobius/` | Möbius 变换图搜索 | NeurIPS 2019 |
 | **PIF-PAG** | `PAG_new/` | PAG 改进版 | — |
 | **PAG-only** | `PAG_without_projection/` | PAG 无投影变体 | — |
-| **Faiss IVF-PQ** | (in-memory) | 倒排文件 + 乘积量化 | — |
 
 ### 官方实现
 
@@ -301,7 +300,6 @@ python benchmark/tools/result_plot.py \
 | `benchmark/benchmark_mobius.py` | **Möbius-Graph**（官方实现）参数扫（`search_budget`） | `run(config, ground_truth)` |
 | `benchmark/benchmark_pag_new.py` | PIF-PAG 脚本执行与输出解析 | `run(config)` |
 | `benchmark/benchmark_pag_without_projection.py` | PAG-only 脚本执行与输出解析 | `run(config)` |
-| `benchmark/benchmark_faiss.py` | FAISS IVF-PQ 参数扫（`nprobe`） | `run(config, database, queries, ground_truth)` |
 
 ### 3) 这些模块的“参数从哪里来”
 
@@ -315,7 +313,6 @@ python benchmark/tools/result_plot.py \
 | ip-NSW | `ipnsw_m` `ipnsw_ef_construction` `ipnsw_ef_values` | 图构建与查询参数。 |
 | Mobius | `mobius_budget_values` | Mobius 查询预算扫描列表。 |
 | PAG 变体 | `pag_new_run_script` `pag_new_hnsw_efc` `pag_new_hnsw_M` `pag_new_hnsw_L` `pag_without_proj_run_script` | PIF-PAG / PAG-only 的运行脚本与图参数。 |
-| FAISS | `faiss_nlist` `faiss_nprobe_values` `faiss_m` `faiss_nbits` | IVF-PQ 构建与查询参数。 |
 
 > 说明：不同数据集在 `DatasetConfig.__post_init__` 中会覆盖默认值（如维度、数据路径、参数扫描范围）。
 
