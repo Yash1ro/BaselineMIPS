@@ -6,7 +6,7 @@ MIPS（Maximum Inner Product Search）算法基准测试框架，包含 7 种近
 
 | 算法 | 目录 | 类型 | 论文 |
 |------|------|------|------|
-| **MAG** | `MAG/` | 内存增强图搜索 | — |
+| **MAG** | `MAG/` | 度量两栖图搜索 | SIGIR 2025 |
 | **ScaNN** | (in-memory) | 各向异性向量量化 | — |
 | **ip-NSW** | `ip-nsw/` | 内积导航小世界图 | NeurIPS 2018 |
 | **Möbius-Graph** | `mobius/` | Möbius 变换图搜索 | NeurIPS 2019 |
@@ -15,6 +15,7 @@ MIPS（Maximum Inner Product Search）算法基准测试框架，包含 7 种近
 
 ### 官方实现
 
+- **MAG** 是官方实现，来自 SIGIR 2025 论文 *"Stitching Inner Product and Euclidean Metrics for Topology-aware Maximum Inner Product Search"* (ZJU-DAILY)。
 - **ip-NSW** 是官方实现，来自 NIPS 2018 论文 *"Non-metric Similarity Graphs for Maximum Inner Product Search"* (Morozov & Babenko)，基于 [hnswlib](https://github.com/nmslib/hnswlib)。
 - **Möbius-Graph** 是官方实现，来自 NeurIPS 2019 论文 *"Möbius Transformation for Fast Inner Product Search on Graph"*，底层图搜索基于 [SONG](https://github.com/sunbelbd/song)。
 
@@ -248,7 +249,7 @@ python benchmark/tools/result_plot.py \
 
 | 脚本 | 作用 | 入口函数参数 |
 |------|------|--------------|
-| `benchmark/benchmark_mag.py` | MAG 参数扫（`efs`） | `run(config, ground_truth)` |
+| `benchmark/benchmark_mag.py` | **MAG**（官方实现，SIGIR 2025）参数扫（`efs`） | `run(config, ground_truth)` |
 | `benchmark/benchmark_scann.py` | ScaNN 参数扫（`reorder` 或 `leaves`） | `run(config, database, queries, ground_truth)` |
 | `benchmark/benchmark_ipnsw.py` | **ip-NSW**（官方实现）参数扫（`efSearch`） | `run(config, ground_truth)` |
 | `benchmark/benchmark_mobius.py` | **Möbius-Graph**（官方实现）参数扫（`search_budget`） | `run(config, ground_truth)` |
