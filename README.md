@@ -22,9 +22,53 @@ MIPS（Maximum Inner Product Search）算法基准测试框架，包含 7 种近
 
 ### 环境配置
 
+#### 系统依赖
+
+```bash
+# Ubuntu/Debian
+sudo apt install -y build-essential g++ make cmake \
+  libboost-all-dev libgoogle-perftools-dev
+```
+
+- `g++` / `cmake` / `make`：编译 ip-NSW、Möbius-Graph、MAG、PAG-only 的 C++ 代码
+- `libboost-all-dev`：MAG 所需
+- `libgoogle-perftools-dev`：MAG tcmalloc 依赖
+
+#### Python 环境
+
 ```bash
 cd /home/gu/baseline
+python3 -m venv exp
 source exp/bin/activate
+pip install -U pip
+```
+
+#### Python 包
+
+```bash
+# 必须（benchmark 核心 + 绘图）
+pip install numpy matplotlib
+
+# 可选
+pip install tqdm          # convert.py 进度条
+pip install scann         # ScaNN 算法支持
+pip install requests h5py # 数据下载（download.py）
+```
+
+#### 编译 C++ 程序
+
+```bash
+# ip-NSW
+cd ip-nsw && cmake CMakeLists.txt && make && cd ..
+
+# Möbius-Graph
+cd mobius && make && cd ..
+
+# MAG
+cd MAG && mkdir -p build && cd build && cmake .. && make && cd ../..
+
+# PAG-only
+cd PAG_without_projection && mkdir -p build && cd build && cmake .. && make && cd ../..
 ```
 
 ### 单数据集测试 (`benchmark/benchmark.py`)
