@@ -1,0 +1,12 @@
+build/
+cmake-build-*/
+
+# Compiled objects/libraries/executables
+*.o
+*.a
+PEOs
+libpeos.a
+
+# Editor/OS files
+.DS_Store
+*.swp
