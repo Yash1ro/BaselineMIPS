@@ -83,6 +83,9 @@ cd MAG && mkdir -p build && cd build && cmake .. && make && cd ../..
 
 # PAG-only
 cd PAG_without_projection && mkdir -p build && cd build && cmake .. && make && cd ../..
+
+# PIF-PAG
+cd PAG_new && mkdir -p build && cd build && cmake .. && make && cd ../..
 ```
 
 ### 单数据集测试 (`benchmark/benchmark.py`)
