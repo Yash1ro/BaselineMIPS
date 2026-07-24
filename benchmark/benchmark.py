@@ -103,7 +103,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--algorithms",
-        default="mag,scann,ipnsw,mobius,pag",
+        default="mag,scann,ipnsw,mobius,pag_new,pag_without_projection",
         help="Comma-separated algorithms to run",
     )
     parser.add_argument(
@@ -189,6 +189,11 @@ def main() -> None:
     plot_title = args.title or f"{cfg.name} Recall-QPS Benchmark"
 
     print("\n[1/4] Loading data...")
+    if not os.path.exists(cfg.database_bin):
+        print(f"\n  ERROR: Database file not found: {cfg.database_bin}")
+        print(f"  Please ensure dataset '{cfg.name}' is available under data/{cfg.name}/")
+        print(f"  See README for dataset preparation instructions.\n")
+        sys.exit(1)
     database = read_bin(cfg.database_bin, cfg.dim)
     queries = read_bin(cfg.query_bin, cfg.dim)
     cfg.db_size = int(database.shape[0])
