@@ -52,6 +52,10 @@ namespace hnswlib {
       //cout << size_links_level0_ << "\t" << data_size_ << "\t" << sizeof(labeltype) << "\n";
 
       data_level0_memory_ = (char *)malloc(maxelements_*size_data_per_element_);
+      if (!data_level0_memory_) {
+        throw std::runtime_error("Failed to allocate data_level0_memory_ ("
+          + std::to_string(maxelements_*size_data_per_element_ / (1024*1024)) + " MB)");
+      }
 
       size_t predicted_size_per_element = size_data_per_element_ + sizeof(void*) + 8 + 8 + 2 * 8;
       //cout << "size_mb=" << maxelements_*(predicted_size_per_element) / (1000 * 1000) << "\n";

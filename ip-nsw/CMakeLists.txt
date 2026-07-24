@@ -8,5 +8,5 @@ project(ip-nsw)
 set(SOURCE_EXE main.cpp)            
 
 add_executable(main ${SOURCE_EXE})  
-SET( CMAKE_CXX_FLAGS  "-Ofast -lrt -DNDEBUG -std=c++11 -DHAVE_CXX0X -fopenmp -march=native -fpic -w -fopenmp -ftree-vectorize -ftree-vectorizer-verbose=0" )
+SET( CMAKE_CXX_FLAGS  "-Ofast -lrt -DNDEBUG -std=c++11 -DHAVE_CXX0X -march=native -fpic -w -fopenmp -ftree-vectorize -ftree-vectorizer-verbose=0" )
 target_link_libraries(main) 

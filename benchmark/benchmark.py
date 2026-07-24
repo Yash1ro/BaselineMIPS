@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import datetime
 import importlib
+import json
 import os
 import sys
 from pathlib import Path
@@ -117,13 +118,67 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--plot", default=None, help="Output plot path")
     parser.add_argument("--title", default=None, help="Plot title")
+    parser.add_argument("--top-k", type=int, default=None, help="Override top-K (e.g. 500)")
     return parser.parse_args()
+
+
+def _apply_top500_params(cfg: DatasetConfig) -> None:
+    """Widen parameter sweeps so budgets cover the larger top-500 demand."""
+    cfg.mag_efs            = [500, 600, 800, 1000, 1500, 2000, 3000]
+    cfg.ipnsw_ef_values    = [500, 600, 800, 1000, 1500, 2000, 3000]
+    cfg.mobius_budget_values = [500, 600, 800, 1000, 1500, 2000, 3000]
+    cfg.scann_reorder_values = [1000, 1500, 2000, 3000, 4000, 5000, 8000, 10000]
+    cfg.scann_leaves_values  = [100, 200, 500, 1000, 2000]
+    cfg.pag_hnsw_efc       = 500
+    cfg.pag_run_script     = "run_music100_top500.sh"
+
+
+MEM_LOG_PATH = RESULTS_DIR / "log_mem.log"
+
+
+def _save_mem_log(
+    dataset: str,
+    top_k: int,
+    selected: list[str],
+    build_times: dict[str, float],
+    build_mem: dict[str, float],
+    query_mem: dict[str, float],
+    failed_algos: dict[str, str],
+) -> None:
+    """Append one JSON record per benchmark run to log_mem.log."""
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    record: dict = {
+        "timestamp": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+        "dataset": dataset,
+        "top_k": top_k,
+        "algorithms": {},
+    }
+    for algo in selected:
+        if algo in failed_algos:
+            record["algorithms"][algo] = {"status": "failed"}
+            continue
+        bm = build_mem.get(algo, 0.0)
+        record["algorithms"][algo] = {
+            "build_time_s": round(build_times.get(algo, 0.0), 3),
+            "build_peak_mb": round(bm, 1) if bm > 0 else None,
+            "query_peak_mb": round(query_mem.get(algo, 0.0), 1),
+        }
+    with open(MEM_LOG_PATH, "a", encoding="utf-8") as f:
+        f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    print(f"Memory log  : {MEM_LOG_PATH}")
 
 
 def main() -> None:
     args = parse_args()
     cfg = DatasetConfig(name=args.dataset)
     cfg.scann_mode = args.scann_mode
+    if args.top_k is not None:
+        cfg.top_k = args.top_k
+        if cfg.name == "music100" and args.top_k == 500:
+            _apply_top500_params(cfg)
+        # Set PAG script for the appropriate top_k.
+        if args.top_k != 100:
+            cfg.pag_run_script = f"run_{cfg.name}_top{args.top_k}.sh"
 
     print("=" * 72)
     print("BENCHMARK PIPELINE")
@@ -181,10 +236,16 @@ def main() -> None:
     print("\n[2/4] Running algorithm sweeps...")
     all_points: list[dict] = []
     failed_algos: dict[str, str] = {}
+    build_times: dict[str, float] = {}
+    build_mem: dict[str, float] = {}
+    query_mem: dict[str, float] = {}
     for name in selected:
         print(f"\n--- {name.upper()} ---")
         try:
-            points = run_algorithm(name, cfg, database, queries, ground_truth)
+            points, build_time, build_peak_mb, query_peak_mb = run_algorithm(name, cfg, database, queries, ground_truth)
+            build_times[name] = build_time
+            build_mem[name] = build_peak_mb
+            query_mem[name] = query_peak_mb
             all_points.extend(flatten_points(name, points))
         except Exception as exc:
             import traceback
@@ -197,6 +258,28 @@ def main() -> None:
         for algo, msg in failed_algos.items():
             print(f"  {algo}: {msg.splitlines()[-1]}")
 
+    if build_times:
+        print("\n[INDEX BUILD TIMES]")
+        print(f"  {'Algorithm':<12} {'Build Time':>12}")
+        print(f"  {'-'*12} {'-'*12}")
+        for algo, bt in build_times.items():
+            if bt > 0:
+                print(f"  {algo:<12} {bt:>11.2f}s")
+            else:
+                print(f"  {algo:<12} {'(prebuilt)':>12}")
+
+    if build_mem or query_mem:
+        print("\n[PEAK MEMORY (MB)]")
+        print(f"  {'Algorithm':<12} {'Build Peak':>12} {'Query Peak':>12}")
+        print(f"  {'-'*12} {'-'*12} {'-'*12}")
+        for algo in selected:
+            if algo in failed_algos:
+                continue
+            bm = build_mem.get(algo, 0.0)
+            qm = query_mem.get(algo, 0.0)
+            bm_str = f"{bm:.1f} MB" if bm > 0 else "(prebuilt)"
+            print(f"  {algo:<12} {bm_str:>12} {qm:>10.1f} MB")
+
     if not all_points:
         raise RuntimeError("No benchmark points produced (all algorithms failed)")
 
@@ -208,6 +291,17 @@ def main() -> None:
         update_algorithm_section(all_points, selected[0], result_txt)
     else:
         save_results(all_points, result_txt, metadata=metadata)
+
+    # Save memory log.
+    _save_mem_log(
+        dataset=cfg.name,
+        top_k=cfg.top_k,
+        selected=selected,
+        build_times=build_times,
+        build_mem=build_mem,
+        query_mem=query_mem,
+        failed_algos=failed_algos,
+    )
 
     print("\n[4/4] Plotting curves...")
     plot_results(result_txt, plot_path, plot_title, dataset_name=cfg.name, top_k=cfg.top_k)

@@ -153,6 +153,9 @@ int main(int argc,char** argv){
 		return 1;
 	}
     // topk = atoi(argv[4]);
+    auto ends_with_bin = [](const std::string& p) {
+        return p.size() >= 4 && p.substr(p.size()-4) == ".bin";
+    };
     if(mode == "build"){
 		std::vector<std::pair<int,value_t>> dummy_mobius_point;
 		if(dist_type == "mobius"){
@@ -160,7 +163,10 @@ int main(int argc,char** argv){
 				dummy_mobius_point.push_back(std::make_pair(i,0));
 		}
 		if(dist_type == "mobius"){
-        	std::unique_ptr<ParserDense> build_parser(new ParserDense(train_path.c_str(),build_callback_mobius));
+			if(ends_with_bin(train_path))
+				std::unique_ptr<ParserDenseBin> build_parser(new ParserDenseBin(train_path.c_str(),dim,build_callback_mobius));
+			else
+        		std::unique_ptr<ParserDense> build_parser(new ParserDense(train_path.c_str(),build_callback_mobius));
 		}else{
 			usage(argv);
 			return 1;
@@ -188,7 +194,10 @@ int main(int argc,char** argv){
 			((FixedDegreeGraph<1>*)graph.get())->ignore_startpoint = false;
 		//	query_idx_offset = -1;
 		}
-        std::unique_ptr<ParserDense> query_parser(new ParserDense(query_path.c_str(),query_callback));
+        if(ends_with_bin(query_path))
+			std::unique_ptr<ParserDenseBin> query_parser(new ParserDenseBin(query_path.c_str(),dim,query_callback));
+		else
+        	std::unique_ptr<ParserDense> query_parser(new ParserDense(query_path.c_str(),query_callback));
 		
 		double time_us_per_query = total_time/ count_query;
 		double queries_per_second = 1000000.0/time_us_per_query;

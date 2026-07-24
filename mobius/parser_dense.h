@@ -99,3 +99,27 @@ public:
         fclose(fp);
     }
 };
+
+// 读取裸 float32 二进制文件（无 header，n_rows * dim * 4 字节）
+class ParserDenseBin {
+public:
+    ParserDenseBin(const char* path, int dim,
+                   std::function<void(idx_t, std::vector<std::pair<int,value_t>>)> consume) {
+        FILE* fp = fopen(path, "rb");
+        if (fp == NULL) {
+            Logger::log(Logger::ERROR, "File not found at (%s)\n", path);
+            exit(1);
+        }
+        std::vector<value_t> buf(dim);
+        idx_t idx = 0;
+        while (fread(buf.data(), sizeof(value_t), dim, fp) == (size_t)dim) {
+            std::vector<std::pair<int,value_t>> vec_sample;
+            vec_sample.reserve(dim);
+            for (int i = 0; i < dim; ++i)
+                vec_sample.push_back(std::make_pair(i, buf[i]));
+            consume(idx, vec_sample);
+            ++idx;
+        }
+        fclose(fp);
+    }
+};

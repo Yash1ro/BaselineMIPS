@@ -64,9 +64,9 @@ int main(int argc, char** argv) {
     int efConstruction = defaultEfConstruction;
     int efSearch = defaultEfSearch;
     int M = defaultM;
-    int vecsize = -1;
-    int qsize = -1;
-    int vecdim = -1;
+    size_t vecsize = 0;
+    size_t qsize = 0;
+    size_t vecdim = 0;
     std::string graphname;
     std::string outputname;
     int topK = defaultTopK;
@@ -125,14 +125,14 @@ int main(int argc, char** argv) {
 
         for (int i = 1; i < argc - 1; i++) {
             if (std::string(argv[i]) == "--dataSize" || std::string(argv[i]) == "--dSize" || std::string(argv[i]) == "--databaseSize") {
-                if (sscanf(argv[i + 1], "%d", &vecsize) != 1 || vecsize <= 0) {
+                if (sscanf(argv[i + 1], "%zu", &vecsize) != 1 || vecsize == 0) {
                     printError("Inappropriate value for database size: \"" + std::string(argv[i + 1]) + "\"");
                     return 0;
                 }
                 break;
             }
         }
-        if (vecsize == -1) {
+        if (vecsize == 0) {
             printError("Database size was not specified");
             return 0;
         }
@@ -141,14 +141,14 @@ int main(int argc, char** argv) {
         
         for (int i = 1; i < argc - 1; i++) {
             if (std::string(argv[i]) == "--dataDim" || std::string(argv[i]) == "--dimension" || std::string(argv[i]) == "--databaseDimension") {
-                if (sscanf(argv[i + 1], "%d", &vecdim) != 1 || vecdim <= 0) {
+                if (sscanf(argv[i + 1], "%zu", &vecdim) != 1 || vecdim == 0) {
                     printError("Inappropriate value for database dimension: \"" + std::string(argv[i + 1]) + "\"");
                     return 0;
                 }
                 break;
             }
         }
-        if (vecdim == -1) {
+        if (vecdim == 0) {
             printError("Database dimension was not specified");
             return 0;
         }
@@ -201,27 +201,28 @@ int main(int argc, char** argv) {
 
        
         hnswlib::L2Space l2space(vecdim);
-        const size_t total_db_values = (size_t)vecsize * (size_t)vecdim;
-        float *mass = new float[total_db_values];
-        input.read((char *)mass, (std::streamsize)(total_db_values * sizeof(float)));
+        size_t total_elems = (size_t)vecsize * vecdim;
+        std::cout << "Allocating " << (total_elems * sizeof(float) / (1024*1024)) << " MB for data" << std::endl;
+        float *mass = new float[total_elems];
+        input.read((char *)mass, total_elems * sizeof(float));
         input.close();
         
         appr_alg = new hnswlib::HierarchicalNSW<float>(&l2space, vecsize, M, efConstruction);
         std::cout << "Building index\n";
         double t1 = omp_get_wtime();
-        for (int i = 0; i < 1; i++) {
-            appr_alg->addPoint((void *)(mass + (size_t)vecdim * (size_t)i), (size_t)i);
+        for (size_t i = 0; i < 1; i++) {
+            appr_alg->addPoint((void *)(mass + (size_t)vecdim*i), i);
         }
 #pragma omp parallel for
-        for (int i = 1; i < vecsize; i++) {
-            appr_alg->addPoint((void *)(mass + (size_t)vecdim * (size_t)i), (size_t)i);
+        for (size_t i = 1; i < vecsize; i++) {
+            appr_alg->addPoint((void *)(mass + (size_t)vecdim*i), i);
         }
         double t2 = omp_get_wtime();
  
         std::cout << "Index built, time=" << t2 - t1 << " s" << "\n";
         appr_alg->SaveIndex(graphname.data());
         delete appr_alg;
-        delete[] mass;
+        delete mass;
     } else {
         for (int i = 1; i < argc - 1; i++) {
             if (std::string(argv[i]) == "--q" || std::string(argv[i]) == "--query") {
@@ -245,14 +246,14 @@ int main(int argc, char** argv) {
 
         for (int i = 1; i < argc - 1; i++) {
             if (std::string(argv[i]) == "--querySize" || std::string(argv[i]) == "--qSize") {
-                if (sscanf(argv[i + 1], "%d", &qsize) != 1 || qsize <= 0) {
+                if (sscanf(argv[i + 1], "%zu", &qsize) != 1 || qsize == 0) {
                     printError("Inappropriate value for query size: \"" + std::string(argv[i + 1]) + "\"");
                     return 0;
                 }
                 break;
             }
         }
-        if (qsize == -1) {
+        if (qsize == 0) {
             printError("Query size was not specified");
             return 0;
         }
@@ -261,14 +262,14 @@ int main(int argc, char** argv) {
         
         for (int i = 1; i < argc - 1; i++) {
             if (std::string(argv[i]) == "--queryDim" || std::string(argv[i]) == "--dimension" || std::string(argv[i]) == "--queryDimension") {
-                if (sscanf(argv[i + 1], "%d", &vecdim) != 1 || vecdim <= 0) {
+                if (sscanf(argv[i + 1], "%zu", &vecdim) != 1 || vecdim == 0) {
                     printError("Inappropriate value for query dimension: \"" + std::string(argv[i + 1]) + "\"");
                     return 0;
                 }
                 break;
             }
         }
-        if (vecdim == -1) {
+        if (vecdim == 0) {
             printError("Query dimension was not specified");
             return 0;
         }
@@ -340,12 +341,11 @@ int main(int argc, char** argv) {
 
 
         hnswlib::L2Space l2space(vecdim);
-        const size_t total_query_values = (size_t)qsize * (size_t)vecdim;
-        float *massQ = new float[total_query_values];
-        inputQ.read((char *)massQ, (std::streamsize)(total_query_values * sizeof(float)));
+        float *massQ = new float[(size_t)qsize * vecdim];
+        inputQ.read((char *)massQ, (size_t)qsize * vecdim * sizeof(float));
         inputQ.close();
 
-        std::priority_queue< std::pair< float, labeltype >> gt[qsize];
+        std::vector<std::priority_queue< std::pair< float, labeltype >>> gt(qsize);
 		
         appr_alg = new hnswlib::HierarchicalNSW<float>(&l2space, graphname.data(), false);
         appr_alg->setEf(efSearch);
@@ -355,11 +355,11 @@ int main(int argc, char** argv) {
         }
        
         auto start = std::chrono::high_resolution_clock::now();
-        for (int i = 0; i < qsize; i++) {
-            gt[i] = appr_alg->searchKnn(massQ + (size_t)vecdim * (size_t)i, topK);
+        for (size_t i = 0; i < qsize; i++) {
+            gt[i] = appr_alg->searchKnn(massQ + (size_t)vecdim*i, topK);
         }
         auto end = std::chrono::high_resolution_clock::now();
-        for (int i = 0; i < qsize; i++) {
+        for (size_t i = 0; i < qsize; i++) {
             std::vector <int> res;
             while (!gt[i].empty()) {
                 res.push_back(gt[i].top().second);
@@ -384,7 +384,7 @@ int main(int argc, char** argv) {
         }
         std::cout << "Average query time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() / (double)qsize << "ms" << std::endl;
         delete appr_alg;
-        delete[] massQ;
+        delete massQ;
     }
     return 0;
 }

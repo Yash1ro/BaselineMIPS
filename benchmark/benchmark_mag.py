@@ -8,6 +8,7 @@ import time
 
 from common import (
     DatasetConfig,
+    PeakMemoryTracker,
     build_env_without_thread_limits,
     compute_recall,
     ensure_parent_dir,
@@ -71,32 +72,47 @@ def ensure_mag_index(config: DatasetConfig) -> bool:
 def run(config: DatasetConfig, ground_truth):
     """Run MAG recall-QPS sweep across efs values."""
     points = []
-    if not ensure_mag_index(config):
-        raise RuntimeError("[MAG] index unavailable")
+    already_built = file_nonempty(config.mag_index)
+    build_start = time.time()
+    build_peak_mb = 0.0
+    if not already_built:
+        with PeakMemoryTracker() as _bt:
+            if not ensure_mag_index(config):
+                raise RuntimeError("[MAG] index unavailable")
+        build_peak_mb = _bt.peak_mb
+    else:
+        if not ensure_mag_index(config):
+            raise RuntimeError("[MAG] index unavailable")
+    build_time = 0.0 if already_built else time.time() - build_start
+    if not already_built:
+        print(f"[MAG] index build time: {build_time:.2f}s, peak mem: {build_peak_mb:.1f} MB")
 
-    for efs in config.mag_efs:
-        start = time.time()
-        subprocess.run(
-            [
-                config.mag_test_bin,
-                config.database_bin,
-                config.query_bin,
-                config.mag_index,
-                str(efs),
-                str(config.top_k),
-                config.mag_result,
-                "search",
-                str(config.dim),
-            ],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-        elapsed = time.time() - start
-        qps = config.query_size / elapsed
-        results = load_results(config.mag_result, expected_k=config.top_k)
-        recall = compute_recall(results, ground_truth, config.top_k)
-        points.append({"budget": efs, "recall": recall, "qps": qps})
-        print(f"[MAG] efs={efs} recall={recall:.4f} qps={qps:.2f}")
+    query_peak_mb = 0.0
+    with PeakMemoryTracker() as _qt:
+        for efs in config.mag_efs:
+            start = time.time()
+            subprocess.run(
+                [
+                    config.mag_test_bin,
+                    config.database_bin,
+                    config.query_bin,
+                    config.mag_index,
+                    str(efs),
+                    str(config.top_k),
+                    config.mag_result,
+                    "search",
+                    str(config.dim),
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            elapsed = time.time() - start
+            qps = config.query_size / elapsed
+            results = load_results(config.mag_result, expected_k=config.top_k)
+            recall = compute_recall(results, ground_truth, config.top_k)
+            points.append({"budget": efs, "recall": recall, "qps": qps})
+            print(f"[MAG] efs={efs} recall={recall:.4f} qps={qps:.2f}")
+    query_peak_mb = _qt.peak_mb
 
-    return points
+    return points, build_time, build_peak_mb, query_peak_mb
